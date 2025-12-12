@@ -1,0 +1,13 @@
+streamlit
+numpy
+pandas
+joblib
+plotly
+requests
+reportlab
+deep-translator
+gTTS
+pydub
+kaleido
+pydub
+scikit-learn
