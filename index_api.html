@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Smart Recipe — API Demo </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f8f9fb;margin:0;padding:32px;}
+    .card{background:#fff;border:1px solid #e6e6ef;border-radius:12px;padding:20px;max-width:740px;margin:0 auto 24px;}
+    h1{margin:0 0 16px 0}
+    label{display:block;font-weight:600;margin:12px 0 6px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #d6d6e6;border-radius:8px}
+    button{background:#7c4dff;border:0;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer}
+    button.secondary{background:#eee;color:#333;margin-left:8px}
+    pre{background:#0f0f14;color:#d6ffe8;border-radius:8px;padding:12px;overflow:auto}
+    .row{display:flex;gap:12px}
+    .row>div{flex:1}
+    small{color:#666}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Smart Recipe — API Demo <small style="font-weight:600;color:#7c4dff">local</small></h1>
+    <div><small>Endpoint:</small> <code id="ep">http://127.0.0.1:8000/predict</code></div>
+
+    <label>Ingredients (comma-separated)</label>
+    <textarea id="ingredients" rows="3" placeholder="tomato, onion, olive oil, garlic, basil"></textarea>
+
+    <div class="row">
+      <div>
+        <label>Diet</label>
+        <select id="diet">
+          <option value="none" selected>none</option>
+          <option value="vegetarian">vegetarian</option>
+          <option value="vegan">vegan</option>
+          <option value="halal">halal</option>
+          <option value="kosher">kosher</option>
+        </select>
+      </div>
+      <div>
+        <label>top_k (1–5)</label>
+        <input id="topk" type="number" min="1" max="5" value="3"/>
+      </div>
+    </div>
+
+    <label>Notes (optional)</label>
+    <input id="notes" placeholder="e.g., low salt, extra spicy"/>
+
+    <div style="margin-top:14px">
+      <button id="send">Send Request</button>
+      <button id="load" class="secondary">Load Example</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Request Payload</h3>
+    <pre id="payload">{}</pre>
+  </div>
+
+  <div class="card">
+    <h3>Response</h3>
+    <pre id="resp">Ready.</pre>
+  </div>
+
+<script>
+(function(){
+ const ENDPOINT = "https://smart-recipe-app-249886303998.northamerica-northeast2.run.app/predict";
+
+
+  const el = {
+    ing:  document.getElementById("ingredients"),
+    diet: document.getElementById("diet"),
+    topk: document.getElementById("topk"),
+    notes: document.getElementById("notes"),
+    send: document.getElementById("send"),
+    load: document.getElementById("load"),
+    payload: document.getElementById("payload"),
+    resp: document.getElementById("resp"),
+  };
+
+  function buildPayload(){
+    const ingredients = (el.ing.value || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+    const body = {
+      ingredients,
+      diet: (el.diet.value || "none"),
+      top_k: Math.min(5, Math.max(1, parseInt(el.topk.value || "3", 10))),
+      notes: el.notes.value || ""
+    };
+    el.payload.textContent = JSON.stringify(body, null, 2);
+    return body;
+  }
+
+  el.load.addEventListener("click", () => {
+    el.ing.value = "tomato, onion, olive oil, garlic, basil";
+    el.diet.value = "none";
+    el.topk.value = 3;
+    el.notes.value = "";
+    buildPayload();
+  });
+
+  el.send.addEventListener("click", async () => {
+    const body = buildPayload();
+    try {
+      el.resp.textContent = "Sending...";
+      console.log("POST", ENDPOINT, body);
+      const r = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const txt = await r.text();
+      console.log("Status:", r.status, "Body:", txt);
+      el.resp.textContent = (function(){
+        try { return JSON.stringify(JSON.parse(txt), null, 2); }
+        catch { return txt; }
+      })();
+    } catch (e) {
+      console.error(e);
+      el.resp.textContent = "Request failed: " + e;
+    }
+  });
+
+  // init
+  buildPayload();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "ingredients": [
+    "chicken",
+    "yogurt",
+    "garlic",
+    "ginger",
+    "cumin"
+  ],
+  "diet": "halal",
+  "top_k": 3,
+  "notes": "demo payload"
+}

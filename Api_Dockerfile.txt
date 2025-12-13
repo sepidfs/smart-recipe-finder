@@ -1,0 +1,29 @@
+# Dockerfile — builds a small image that serves FastAPI on port 8080
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# tiny init + build tools for wheels when needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential tini && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# --- dependencies ---
+# Pin scikit-learn to the version used to train the .joblib to avoid unpickle warnings
+# (put exact pins in your Api_requirements.txt; see note below)
+COPY Api_requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# --- app code & artifacts ---
+COPY api.py Api_model.py /app/
+COPY cuisine_pipeline.joblib labels.json /app/
+
+# container listens on 8080 for Cloud Run
+ENV PORT=8080
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8080"]

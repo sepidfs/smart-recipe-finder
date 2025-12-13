@@ -1,0 +1,8 @@
+fastapi==0.124.4
+uvicorn[standard]==0.38.0
+pydantic==2.12.5
+joblib==1.4.2
+# match your training env to avoid unpickle issues:
+scikit-learn==1.6.1
+numpy
+scipy
